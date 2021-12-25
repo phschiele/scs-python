@@ -91,6 +91,8 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
           CIBW_BEFORE_ALL_LINUX: "yum install -y openblas-devel liblapack-dev"
           CIBW_BEFORE_ALL_MACOS: "brew install openblas lapack"
+          CIBW_BEFORE_ALL_WINDOWS: "conda install numpy scipy pytest mkl openblas lapack"
+
         uses: joerick/cibuildwheel@v1.11.0
 
       - name: Build source
