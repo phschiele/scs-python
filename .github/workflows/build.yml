@@ -26,23 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-18.04, macos-10.15, windows-2019 ]
-        python-version: [3.6, 3.7, 3.9, "3.10" ]
-        include:
-          - os: ubuntu-18.04
-            python-version: 3.8
-            single_action_config: "True"
-          - os: macos-10.15
-            python-version: 3.8
-          - os: windows-2019
-            python-version: 3.8
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10" ]
 
     env:
-      RUNNER_OS: ${{ matrix.os }}
       PYTHON_VERSION: ${{ matrix.python-version }}
-      SINGLE_ACTION_CONFIG: "${{ matrix.single_action_config == 'True' && 'True' || 'False' }}"
-      PYPI_SERVER: ${{ secrets.PYPI_SERVER }}
-      PYPI_USER: ${{ secrets.PYPI_USER }}
-      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v2
@@ -53,11 +40,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,anaconda
-      - name: Set Additional Envs
-        run: |
-          echo "PYTHON_SUBVERSION=$(echo $PYTHON_VERSION | cut -c 3-)" >> $GITHUB_ENV
-          echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV
-
       - name: Install dependencies
         run: |
           if [[ "$PYTHON_VERSION" == "3.6" ]] || [[ "$PYTHON_VERSION" == "3.7" ]] || [[ "$PYTHON_VERSION" == "3.8" ]]; then
@@ -67,15 +49,6 @@ jobs:
           elif [[ "$PYTHON_VERSION" == "3.10" ]]; then
             conda install scipy=1.7 numpy=1.21 pytest mkl openblas lapack
           fi
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            sudo rm -rf /Library/Developer/CommandLineTools
-          fi
-
-      - name: Downgrade xcode
-        if: runner.os == 'macOS'
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '10.3'
 
       - name: Test
         run: |
@@ -83,17 +56,45 @@ jobs:
           pytest
           rm -rf build/
 
+  build_wheels:
+    needs: build
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-18.04, macos-10.15, windows-2019 ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9, "3.10" ]
+
+    env:
+      RUNNER_OS: ${{ matrix.os }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      PYPI_SERVER: ${{ secrets.PYPI_SERVER }}
+      PYPI_USER: ${{ secrets.PYPI_USER }}
+      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+
+    steps:
+
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set Additional Envs
+        shell: bash
+        run: |
+          echo "PYTHON_SUBVERSION=$(echo $PYTHON_VERSION | cut -c 3-)" >> $GITHUB_ENV
+          echo "SINGLE_ACTION_CONFIG=$( [[ $PYTHON_VERSION == 3.8 && $RUNNER_OS == 'macOS' ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV
+          echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV        
+
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
         env:
           CIBW_BUILD: "cp3${{env.PYTHON_SUBVERSION}}-*"
-          CIBW_SKIP: "*-win32 *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-
+          CIBW_SKIP: "*-win32 *_i686"
         uses: joerick/cibuildwheel@v2.3.1
 
       - name: Build source
-        if: ${{env.DEPLOY == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
+        if: ${{'True' == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
         run: |
           python setup.py sdist --dist-dir=wheelhouse
 
@@ -105,7 +106,7 @@ jobs:
           twine upload --repository-url $PYPI_SERVER wheelhouse/* -u $PYPI_USER -p $PYPI_PASSWORD
 
       - name: Upload artifacts to github
-        if: ${{env.DEPLOY == 'True'}}
+        if: ${{'True' == 'True'}}
         uses: actions/upload-artifact@v1
         with:
           name: wheels
