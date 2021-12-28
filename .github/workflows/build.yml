@@ -89,10 +89,25 @@ jobs:
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
         env:
+          NPY_USE_BLAS_ILP64: '1'
           CIBW_BUILD: "cp3${{env.PYTHON_SUBVERSION}}-*"
-          CIBW_SKIP: "*-win32 *_i686"
-          CIBW_BEFORE_ALL_MACOS: brew install openblas
-          CIBW_BEFORE_ALL_LINUX: yum install openblas
+          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_ENVIRONMENT_LINUX: CFLAGS='-std=c99 -fno-strict-aliasing'
+                                  LDFLAGS='-Wl,--strip-debug'
+                                  OPENBLAS64_=/usr/local
+                                  RUNNER_OS='Linux'
+          # MACOS linker doesn't support stripping symbols
+          CIBW_ENVIRONMENT_MACOS: CFLAGS='-std=c99 -fno-strict-aliasing'
+                                  OPENBLAS64_=/usr/local
+                                  CC=clang
+                                  CXX=clang++
+          CIBW_ENVIRONMENT_WINDOWS: OPENBLAS64_='openblas'
+                                    OPENBLAS=''''
+                                    CFLAGS='''
+                                    LDFLAGS=''
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_BEFORE_BUILD: bash {project}/tools/cibw_before_build.sh {project}
         uses: joerick/cibuildwheel@v2.3.1
 
       - name: Build source
