@@ -86,6 +86,13 @@ jobs:
           echo "SINGLE_ACTION_CONFIG=$( [[ $PYTHON_VERSION == 3.8 && $RUNNER_OS == 'macOS' ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV
           echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV        
 
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+      - shell: msys2 {0}
+        run: |
+          pacman -S mingw-w64-x86_64-openblas
+
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
         env:
