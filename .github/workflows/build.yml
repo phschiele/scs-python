@@ -93,16 +93,24 @@ jobs:
           CIBW_BUILD: "cp3${{env.PYTHON_SUBVERSION}}-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_ENVIRONMENT_LINUX: OPENBLAS_=/usr/local
-                                  RUNNER_OS='Linux'
-          # MACOS linker doesn't support stripping symbols
+          CIBW_ENVIRONMENT_LINUX: RUNNER_OS='Linux'
           CIBW_ENVIRONMENT_MACOS: CFLAGS='-Wno-error=implicit-function-declaration'
-                                  OPENBLAS_=/usr/local
           CIBW_ENVIRONMENT_WINDOWS: OPENBLAS='openblas'
-                                    OPENBLAS_='openblas'
+                                    BLAS_LAPACK_LIBS='openblas'
+                                    BLAS_LAPACK_LIB_PATHS='openblas'
           CIBW_BUILD_VERBOSITY: 3
-          CIBW_BEFORE_BUILD: bash {project}/tools/cibw_before_build.sh {project}
+          CIBW_BEFORE_BUILD: bash {project}/tools/cibw_before_build.sh
         uses: joerick/cibuildwheel@v2.3.1
+
+      - name: Test wheels
+        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
+        shell: bash
+        run: |
+          set -e
+          which python          
+          pip install wheelhouse/*whl
+          pip install pytest
+          pytest
 
       - name: Build source
         if: ${{'True' == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
