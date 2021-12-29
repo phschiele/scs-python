@@ -96,7 +96,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: OPENBLAS_=/usr/local
                                   RUNNER_OS='Linux'
           # MACOS linker doesn't support stripping symbols
-          CIBW_ENVIRONMENT_MACOS: CFLAGS='-std=c99 -fno-strict-aliasing'
+          CIBW_ENVIRONMENT_MACOS: CFLAGS='-Wno-error=implicit-function-declaration'
                                   OPENBLAS_=/usr/local
           CIBW_ENVIRONMENT_WINDOWS: OPENBLAS='openblas'
                                     OPENBLAS_='openblas'
