@@ -91,7 +91,7 @@ jobs:
           msystem: MSYS
       - shell: msys2 {0}
         run: |
-          pacman -S mingw-w64-x86_64-openblas
+          pacman --noconfirm -S mingw-w64-x86_64-openblas
 
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
