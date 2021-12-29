@@ -103,9 +103,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_ENVIRONMENT_LINUX: RUNNER_OS='Linux'
           CIBW_ENVIRONMENT_MACOS: CFLAGS='-Wno-error=implicit-function-declaration'
-          CIBW_ENVIRONMENT_WINDOWS: OPENBLAS="C:\\mingw64"
-                                    BLAS_LAPACK_LIBS=PATH="C:\\mingw64"
-                                    BLAS_LAPACK_LIB_PATHS="C:\\mingw64"
+          CIBW_ENVIRONMENT_WINDOWS: BLAS_LAPACK_LIB_PATHS="C:\\mingw64\\bin"
           CIBW_BUILD_VERBOSITY: 3
           # CIBW_BEFORE_BUILD: bash {project}/tools/cibw_before_build.sh
         uses: joerick/cibuildwheel@v2.3.1
