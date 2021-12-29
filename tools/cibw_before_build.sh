@@ -11,7 +11,7 @@ if [[ $RUNNER_OS == "Linux" || $RUNNER_OS == "macOS" ]] ; then
     cp -r $basedir/lib/* /usr/local/lib
     cp $basedir/include/* /usr/local/include
 elif [[ $RUNNER_OS == "Windows" ]]; then
-    PYTHONPATH=tools python -c "import openblas_support; openblas_support.make_init('scs-python')"
+    PYTHONPATH=tools python -c "import openblas_support; openblas_support.make_init('.')"
     target=$(python tools/openblas_support.py)
     mkdir -p openblas
     cp $target openblas
