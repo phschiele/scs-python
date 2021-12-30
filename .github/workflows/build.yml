@@ -54,12 +54,14 @@ jobs:
           pytest
           rm -rf build/
 
-      - name: Build windows wheels
+      - name: Build and test windows wheels
         if: startsWith(matrix.os, 'windows')
         run: |
           python setup.py bdist_wheel
           python -m pip install delvewheel
           delvewheel repair dist/*whl
+          pip install wheelhouse/*whl
+          pytest    
 
       - name: Upload artifacts to github
         if: startsWith(matrix.os, 'windows')
@@ -100,28 +102,25 @@ jobs:
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
         env:
+          NPY_USE_BLAS_ILP64: '0'
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_BUILD: "cp3${{env.PYTHON_SUBVERSION}}-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
-          CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
-          CIBW_ENVIRONMENT_LINUX: BLAS_LAPACK_LIB_PATHS=/usr/local
-          CIBW_BEFORE_ALL_MACOS: >  
-            brew install openblas lapack &&
-            cp -R /usr/local/opt/openblas/lib/* /usr/local/lib &&
-            cp -R /usr/local/opt/openblas/include/* /usr/local/include &&
-            cp -R /usr/local/opt/lapack/lib/* /usr/local/lib &&
-            cp -R /usr/local/opt/lapack/include/* /usr/local/include
-          CIBW_ENVIRONMENT_MACOS: BLAS_LAPACK_LIB_PATHS=/usr/local
+          CIBW_ENVIRONMENT_LINUX: OPENBLAS_=/usr/local
+                                  RUNNER_OS='Linux'
+          CIBW_ENVIRONMENT_MACOS: CFLAGS='-Wno-error=implicit-function-declaration'
+                                  OPENBLAS_=/usr/local
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_BEFORE_BUILD: bash {project}/tools/cibw_before_build.sh
         uses: joerick/cibuildwheel@v2.3.1
 
-#      - name: Test wheels
-#        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
-#        shell: bash
-#        run: |
-#          set -e
-#          which python
-#          pip install wheelhouse/*whl
-#          pip install pytest
-#          pytest
+      - name: Test wheels
+        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
+        shell: bash
+        run: |
+          pip install wheelhouse/*whl
+          pip install pytest
+          pytest
 
       - name: Build source
         if: ${{'True' == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
@@ -152,11 +151,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: wheels
+          path: ./wheelhouse
 
       - name: Release to pypi
-        if: ${{env.DEPLOY == 'True'}}
+        if: ${{'True' == 'True'}}
         shell: bash
         run: |
           python -m pip install --upgrade twine
-          twine check wheelhouse/*
+          twine check
         # twine upload --repository-url $PYPI_SERVER wheelhouse/* -u $PYPI_USER -p $PYPI_PASSWORD
