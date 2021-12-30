@@ -158,5 +158,5 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade twine
-          twine check
+          twine check wheelhouse/*
         # twine upload --repository-url $PYPI_SERVER wheelhouse/* -u $PYPI_USER -p $PYPI_PASSWORD
