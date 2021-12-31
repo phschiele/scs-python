@@ -57,7 +57,7 @@ jobs:
           pytest
           rm -rf build/
       - name: Build and test windows wheels
-        if: ${{'True' == 'True' && startsWith(matrix.os, 'windows')}}
+        if: ${{env.DEPLOY == 'True' && startsWith(matrix.os, 'windows')}}
         run: |
           python setup.py bdist_wheel
           python -m pip install delvewheel
@@ -65,7 +65,7 @@ jobs:
           pip install wheelhouse/*whl --force-reinstal
           pytest
       - name: Upload artifacts to github
-        if: ${{'True' == 'True' && startsWith(matrix.os, 'windows')}}
+        if: ${{env.DEPLOY == 'True' && startsWith(matrix.os, 'windows')}}
         uses: actions/upload-artifact@v1
         with:
           name: wheels
@@ -102,7 +102,7 @@ jobs:
           echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV        
 
       - name: Build wheels
-        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
+        if: ${{env.DEPLOY == 'True' || env.DEPLOY == 'True'}}
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_BUILD: "cp3${{env.PYTHON_SUBVERSION}}-*"
@@ -119,12 +119,12 @@ jobs:
         uses: joerick/cibuildwheel@v2.3.1
 
       - name: Build source
-        if: ${{'True' == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
+        if: ${{env.DEPLOY == 'True' && env.SINGLE_ACTION_CONFIG == 'True'}}
         run: |
           python setup.py sdist --dist-dir=wheelhouse
 
       - name: Upload artifacts to github
-        if: ${{'True' == 'True'}}
+        if: ${{env.DEPLOY == 'True'}}
         uses: actions/upload-artifact@v1
         with:
           name: wheels
@@ -149,7 +149,7 @@ jobs:
         run: |
           echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV
       - uses: actions/download-artifact@v2
-        if: ${{'True' == 'True'}}
+        if: ${{env.DEPLOY == 'True'}}
         with:
           name: wheels
           path: ./wheelhouse
