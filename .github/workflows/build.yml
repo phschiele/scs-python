@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-10.15 ]
+        os: [ windows-2019 ]
         python-version: [ 3.8 ]
 
     env:
@@ -56,15 +56,10 @@ jobs:
             cp -r /usr/local/opt/openblas/lib/* /usr/local/lib &&
             cp /usr/local/opt/openblas/include/* /usr/local/include
           CIBW_BUILD_VERBOSITY: 3
+          CIBW_TEST_COMMAND: pytest {package}
+          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
         uses: joerick/cibuildwheel@v2.3.1
-
-#      - name: Test wheels
-#        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
-#        shell: bash
-#        run: |
-#          pip install wheelhouse/*whl
-#          pip install pytest
-#          pytest
 
       - name: Upload artifacts to github
         if: ${{'True' == 'True'}}
