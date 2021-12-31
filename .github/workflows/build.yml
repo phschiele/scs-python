@@ -62,7 +62,7 @@ jobs:
             brew install openblas && 
             cp -r /usr/local/opt/openblas/lib/* /usr/local/lib &&
             cp /usr/local/opt/openblas/include/* /usr/local/include
-          CIBW_ENVIRONMENT_WINDOWS: BLAS_LAPACK_LIB_PATHS="C:\\mingw64\\lib"
+          CIBW_ENVIRONMENT_WINDOWS: BLAS_LAPACK_LIB_PATHS="C:\\mingw64\\lib;C:\\mingw64\\include\\openblas;C:\\mingw64\\include;C:\\mingw64\\bin"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_TEST_COMMAND: pytest {package}
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
