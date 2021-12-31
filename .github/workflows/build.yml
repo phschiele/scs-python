@@ -62,7 +62,7 @@ jobs:
           python setup.py bdist_wheel
           python -m pip install delvewheel
           delvewheel repair dist/*whl
-          pip install wheelhouse/*whl
+          pip install wheelhouse/*whl --force-reinstal
           pytest
       - name: Upload artifacts to github
         if: ${{'True' == 'True' && startsWith(matrix.os, 'windows')}}
@@ -112,6 +112,7 @@ jobs:
             brew install openblas && 
             cp -r /usr/local/opt/openblas/lib/* /usr/local/lib &&
             cp /usr/local/opt/openblas/include/* /usr/local/include
+          CIBW_ENVIRONMENT_MACOS: CFLAGS='-Wno-error=implicit-function-declaration'
           CIBW_BUILD_VERBOSITY: 3
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {package}
