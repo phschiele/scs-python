@@ -44,6 +44,13 @@ jobs:
           echo "SINGLE_ACTION_CONFIG=$( [[ $PYTHON_VERSION == 3.8 && $RUNNER_OS == 'macOS' ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV
           echo "DEPLOY=$( [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_REF == 'refs/tags'* ]] && echo 'True' || echo 'False' )" >> $GITHUB_ENV        
 
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+      - shell: msys2 {0}
+        run: |
+          pacman --noconfirm -S mingw-w64-x86_64-openblas
+
       - name: Build wheels
         if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
         env:
@@ -55,7 +62,7 @@ jobs:
             brew install openblas && 
             cp -r /usr/local/opt/openblas/lib/* /usr/local/lib &&
             cp /usr/local/opt/openblas/include/* /usr/local/include
-          CIBW_BEFORE_ALL_WINDOWS: choco install openblas -y
+          CIBW_ENVIRONMENT_WINDOWS: BLAS_LAPACK_LIB_PATHS="C:\\mingw64\\lib"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_TEST_COMMAND: pytest {package}
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
