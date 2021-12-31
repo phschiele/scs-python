@@ -54,13 +54,13 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
         uses: joerick/cibuildwheel@v2.3.1
 
-#      - name: Test wheels
-#        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
-#        shell: bash
-#        run: |
-#          pip install wheelhouse/*whl
-#          pip install pytest
-#          pytest
+      - name: Test wheels
+        if: ${{'True' == 'True' || env.DEPLOY == 'True'}}
+        shell: bash
+        run: |
+          pip install wheelhouse/*whl
+          pip install pytest
+          pytest
 
       - name: Upload artifacts to github
         if: ${{'True' == 'True'}}
